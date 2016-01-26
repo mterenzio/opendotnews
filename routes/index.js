@@ -2,6 +2,7 @@ var express = require('express');
 var router = express.Router();
 var http = require('http');
 var https = require('https');
+var cheerio = require('cheerio');
 
 router.get('/', function(req, res) {
     res.render('index', { title: 'home' });
@@ -26,11 +27,17 @@ router.get('/c/s/:domain/:path*', function(req, res) {
 	ampres.on('data', function(chunk) {
 	    body += chunk;
 	}).on('end', function() {
-		//parser = new DOMParser();
-		//doc = parser.parseFromString(body, "text/html");
-		//if (doc.getElementsByTagName("html")[0].getAttribute("amp") == true) {
+		$ = cheerio.load(body);
+		if ($('html').attr('amp') == "" || $('html').attr('⚡') == "") {
 			res.send(body);
-		//}
+		} else {
+			var err = new Error('Not Found');
+			err.status = 404;
+			res.render('error', {
+				message: err.message,
+				error: err
+			});
+		}
 	})
     });
     req.on('error', function(e) {
